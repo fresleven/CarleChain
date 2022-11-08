@@ -34,5 +34,9 @@ References:
 
 [Machine Learning Packages](https://www.arewelearningyet.com/)
 
+[Blockchain Packages](https://github.com/rust-in-blockchain/awesome-blockchain-rust)
+
 [Blockchain Tutorial](https://blog.logrocket.com/how-to-build-a-blockchain-in-rust/)
+
+[Blockchain Tutorial 2](https://blog.logrocket.com/custom-blockchain-implementation-rust-substrate/)
 
