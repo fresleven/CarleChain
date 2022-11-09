@@ -1,5 +1,5 @@
 # CarleChain
-CS128H project
+Group name: BigBlock
 
 Group: Ayush (akhot2), Jason (jasonoh3), Luke (lukep2), Sam (samuel37)
 
