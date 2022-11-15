@@ -1,4 +1,4 @@
-pub struct App {
+pub struct Blockchain {
     pub blocks: Vec,
 }
 
@@ -15,7 +15,7 @@ pub struct Block {
     pub nonce: u64,
 }
 
-impl App {
+impl Blockchain {
     fn new() -> Self {
         Self { blocks: vec![] }
     }
