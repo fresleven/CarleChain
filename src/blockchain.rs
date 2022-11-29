@@ -120,6 +120,13 @@ impl Blockchain {
 
     fn validate_chain(&mut self, chain: &[Block]) -> bool {
         //impl validation algorithm for chain using validate_block
+        for i in 1..chain.len() {
+            let curr = chain.get(i).expect("in range");
+            let prev = chain.get(i -1).expect("in range");
+            if self.validate_block(&curr, &prev).is_err() {
+                return false;
+            }
+        }
         return true;
     }
 

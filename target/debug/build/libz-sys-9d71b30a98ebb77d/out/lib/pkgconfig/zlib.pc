@@ -1,0 +1,13 @@
+prefix=C:\Users\khota\OneDrive\Documents\UIUC\cs128h\CarleChain\target\debug\build\libz-sys-9d71b30a98ebb77d\out
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+sharedlibdir=@sharedlibdir@
+includedir=@includedir@
+
+Name: zlib
+Description: zlib compression library
+Version: @VERSION@
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}

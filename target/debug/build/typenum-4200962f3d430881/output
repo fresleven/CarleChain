@@ -1,0 +1,2 @@
+cargo:rustc-env=TYPENUM_BUILD_CONSTS=C:\Users\khota\OneDrive\Documents\UIUC\cs128h\CarleChain\target\debug\build\typenum-4200962f3d430881\out\consts.rs
+cargo:rustc-env=TYPENUM_BUILD_OP=C:\Users\khota\OneDrive\Documents\UIUC\cs128h\CarleChain\target\debug\build\typenum-4200962f3d430881\out\op.rs

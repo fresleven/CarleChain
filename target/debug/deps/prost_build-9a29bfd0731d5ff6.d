@@ -1,0 +1,16 @@
+C:\Users\khota\OneDrive\Documents\UIUC\cs128h\CarleChain\target\debug\deps\prost_build-9a29bfd0731d5ff6.rmeta: C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\lib.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\ast.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\code_generator.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\extern_paths.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\ident.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\message_graph.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\path.rs
+
+C:\Users\khota\OneDrive\Documents\UIUC\cs128h\CarleChain\target\debug\deps\libprost_build-9a29bfd0731d5ff6.rlib: C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\lib.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\ast.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\code_generator.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\extern_paths.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\ident.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\message_graph.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\path.rs
+
+C:\Users\khota\OneDrive\Documents\UIUC\cs128h\CarleChain\target\debug\deps\prost_build-9a29bfd0731d5ff6.d: C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\lib.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\ast.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\code_generator.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\extern_paths.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\ident.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\message_graph.rs C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\path.rs
+
+C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\lib.rs:
+C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\ast.rs:
+C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\code_generator.rs:
+C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\extern_paths.rs:
+C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\ident.rs:
+C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\message_graph.rs:
+C:\Users\khota\.cargo\registry\src\github.com-1ecc6299db9ec823\prost-build-0.8.0\src\path.rs:
+
+# env-dep:PROTOC=C:\\Users\\khota\\.cargo\\registry\\src\\github.com-1ecc6299db9ec823\\prost-build-0.8.0\\third-party\\protobuf\\protoc-win32.exe
+# env-dep:PROTOC_INCLUDE=C:\\Users\\khota\\.cargo\\registry\\src\\github.com-1ecc6299db9ec823\\prost-build-0.8.0\\third-party\\protobuf\\include

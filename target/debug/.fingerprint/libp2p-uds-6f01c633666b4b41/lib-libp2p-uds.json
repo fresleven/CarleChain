@@ -1,0 +1,1 @@
+{"rustc":8344542133073785937,"features":"[\"async-std\", \"default\"]","target":15630767079151197087,"profile":12637318739757120569,"path":8718477919548672970,"deps":[],"local":[{"CheckDepInfo":{"dep_info":"debug\\.fingerprint\\libp2p-uds-6f01c633666b4b41\\dep-lib-libp2p-uds"}}],"rustflags":[],"metadata":1138361091186958928,"config":2202906307356721367,"compile_kind":0}
