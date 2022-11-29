@@ -49,7 +49,7 @@ impl Blockchain {
         self.add_patient_struct(Patient{patient_id, age, patient_name})
     }
 
-    fn add_patient_struct(&mut self, patient: Patient) {
+    pub fn add_patient_struct(&mut self, patient: Patient) {
         if self.blocks.is_empty() {
             self.genesis(patient)
         }
@@ -108,7 +108,7 @@ impl Blockchain {
             return Err(BlockError::InvalidPreviousHash);
         } else if !hash_to_binary(&hex::decode(&block.hash).unwrap()).starts_with(DIFFICULTY_PREFIX) {
             return Err(BlockError::InvalidPrefixHash);
-        } else if block.id -1 != curr_last_block.id {
+        } else if block.id - 1 != curr_last_block.id {
             return Err(BlockError::InvalidID);
         } else if hex::encode(generate_hash(block.id, block.previous_hash.clone(), block.timestamp)) != block.hash {
             return Err(BlockError::IncorrectHash);
@@ -150,7 +150,7 @@ fn hash_to_binary(curr_hash: &[u8]) -> String {
 
 fn generate_nonce() -> u64 {
     //Impl random num generator
-    let mut rng = rand::thread_rng();
+    let mut rng: ThreadRng = rand::thread_rng();
     
     let random_number_64: u64 = rng.gen();
     return random_number_64;
