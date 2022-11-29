@@ -155,3 +155,34 @@ fn generate_nonce() -> u64 {
     let random_number_64: u64 = rng.gen();
     return random_number_64;
 }
+
+#[cfg(test)]
+
+mod test {
+    use super::*;
+    use std::collections::HashSet;
+
+    #[test]
+    fn test_generate_hash() {
+        assert_eq!(generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953), 
+            generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953));
+        assert_ne!(generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953), 
+            generate_hash(002, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953));
+        assert_ne!(generate_hash(000, "".to_string(), 0), generate_hash(001, "a".to_string(), 1));
+    }
+
+    #[test]
+    fn hash_to_binary_test() {
+        let hash_1: String = generate_hash(000, "".to_string(), 0);
+        assert_eq!("", "");
+    }
+
+    #[test]
+    fn generate_nonce_test() {
+        let mut nonces: HashSet<u64> = HashSet::new();
+        for _i in 0..100 {
+            nonces.insert(generate_nonce());
+        }
+        assert_eq!(nonces.len(), 100);
+    }
+}
