@@ -81,8 +81,8 @@ impl Blockchain {
         let timestamp = Utc::now().timestamp();
         let patient_info = patient;
         let previous_hash = &self.blocks.last().expect("Blockchain is not empty").hash;
-        let hash = generate_hash(id, previous_hash.clone(), timestamp);
         let nonce = generate_nonce();
+        let hash = generate_hash(id, previous_hash.clone(), timestamp, nonce, patient_info.patient_name.clone());
         Block {id, hash, previous_hash : previous_hash.clone(), timestamp, nonce, patient_info}
     }
 
@@ -110,7 +110,7 @@ impl Blockchain {
             return Err(BlockError::InvalidPrefixHash);
         } else if block.id - 1 != curr_last_block.id {
             return Err(BlockError::InvalidID);
-        } else if hex::encode(generate_hash(block.id, block.previous_hash.clone(), block.timestamp)) != block.hash {
+        } else if hex::encode(generate_hash(block.id, block.previous_hash.clone(), block.timestamp, block.nonce, block.patient_info.patient_name.clone())) != block.hash {
             return Err(BlockError::IncorrectHash);
         } else if block.patient_info.patient_name == "" {
             return Err(BlockError::InvalidPatient);
@@ -130,17 +130,27 @@ impl Blockchain {
         return true;
     }
 
-    fn mine_block(id: u64, timestamp: i64, previous_hash: &str, patient: Patient) {
-        //implement mining algorithm (need nonce)
+    fn mine_block(id: u64, timestamp: i64, previous_hash: &str, patient_name: &str) -> (u64, String) {
+        let mut nonce = 0;
+        loop {
+            let hash = generate_hash(id, previous_hash.to_string(), timestamp, nonce, patient_name.to_string());
+            let binary_hash = hash_to_binary(&hash.as_bytes());
+            if binary_hash.starts_with(DIFFICULTY_PREFIX) {
+                return (nonce, hex::encode(hash));
+            }
+            nonce += 1;
+        }
     }
 }
 
-fn generate_hash(id: u64, previous_hash: String, timestamp: i64) -> String {
+fn generate_hash(id: u64, previous_hash: String, timestamp: i64, nonce: u64, patient_name: String) -> String {
     //Impl SHA 256 algorithm
     let data = serde_json::json!({
         "id": id, 
         "previous_hash": previous_hash,
         "timestamp": timestamp,
+        "nonce": nonce,
+        "patient_name": patient_name
     });
     let mut hasher = Sha256::new();
     hasher.update(data.to_string().as_bytes());
