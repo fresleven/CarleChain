@@ -137,7 +137,7 @@ fn generate_hash(id: u64, previous_hash: String, timestamp: i64) -> String {
     });
     let mut hasher = Sha256::new();
     hasher.update(data.to_string().as_bytes());
-    return str::from_utf8(&hasher.finalize().as_slice().to_owned()).unwrap().to_string();
+    return String::from_utf8_lossy(&hasher.finalize().as_slice().to_owned().clone()).to_string();
 }
 
 fn hash_to_binary(curr_hash: &[u8]) -> String {
@@ -172,7 +172,7 @@ mod test {
     }
 
     #[test]
-    fn hash_to_binary_test() {
+    fn hash_to_binary_test() { // I'll leave this to Ayush to implement
         let hash_1: String = generate_hash(000, "".to_string(), 0);
         assert_eq!("", "");
     }
