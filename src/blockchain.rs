@@ -1,3 +1,9 @@
+use rand::prelude::*;
+use chrono::Utc;
+use sha2::Sha256;
+use serde::Serialize;
+use serde::Deserialize;
+
 const DIFFICULTY_PREFIX: &str = "000";
 
 #[derive(Debug)]
@@ -24,18 +30,22 @@ pub struct Block {
     pub patient_info : Patient
 }
 
+#[derive(Debug, Clone)]
 pub struct Patient {
     pub patient_id: u64,
     pub age: u64,
     pub patient_name: String,
 }
+
 impl Blockchain {
     fn new() -> Self {
         Self { blocks: vec![] }
     }
+
     fn add_patient(&mut self, patient_id: u64, age: u64, patient_name: u64) {
         self.add_patient_struct(Patient{patient_id, age, patient_name})
     }
+
     fn add_patient_struct(&mut self, patient: Patient) {
         if self.blocks.is_empty() {
             self.genesis(patient)
@@ -44,6 +54,7 @@ impl Blockchain {
             self.add_patient_nonempty(patient)
         }
     }
+
     fn genesis(&mut self, patient: Patient) {
         let genesis_block = Block {
             id: 0,
@@ -55,11 +66,13 @@ impl Blockchain {
         };
         self.blocks.push(genesis_block);
     }
+
     fn add_patient_nonempty(&mut self, patient: Patient) {
         let block: Block = self.create_block(patient);
         let curr_last_block: Block = self.blocks.last();
         self.try_add_block(block, curr_last_block);
     }
+
     fn create_block(&mut self, patient: Patient) -> Block {
         let id = self.blocks.last().expect("Blockchain is not empty").id + 1;
         let timestamp = Utc::now().timestamp();
@@ -69,9 +82,10 @@ impl Blockchain {
         let nonce = generate_nonce();
         Block {id, hash, previous_hash, timestamp, nonce, patient_info}
     }
+
     fn try_add_block(&mut self, block: Block, curr_last_block: Block) {
         //Need to validate block hash/nonce/id is correct
-        let res: Result<bool, BlockError> = self.is_block_valid(block, curr_last_block)
+        let res: Result<bool, BlockError> = self.is_block_valid(block, curr_last_block);
         if self.is_block_valid(block, curr_last_block).is_some() {
             self.blocks.push(block);
         } else {
@@ -85,23 +99,26 @@ impl Blockchain {
             }
         }
     }
+
     fn validate_block(&mut self, block: Block, curr_last_block: Block) -> Result<bool, BlockError> {
         if curr_last_block.hash != block.previous_hash{
             return Err(BlockError::InvalidPreviousHash);
         } else if !hash_to_binary(&hex::decode(&block.hash)).starts_with(DIFFICULTY_PREFIX) {
             return Err(BlockError::InvalidPrefixHash);
         } else if block.id -1 != curr_last_block.id {
-            return Err(BlockError:InvalidID);
+            return Err(BlockError::InvalidID);
         } else if hex::encode(generate_hash(block.id, &block.previous_hash, block.timestamp)) != block.hash {
-            return Err(BlockError:IncorrectHash);
+            return Err(BlockError::IncorrectHash);
         } else if (block.patient.patient_name == "") {
-            return Err(BlockError:InvalidPatient);
+            return Err(BlockError::InvalidPatient);
         }
         return Some(true);
     }
+
     fn validate_chain(&mut self, chain: &[Block]) -> bool {
         //impl validation algorithm for chain using validate_block
     }
+
     fn mine_block(id: u64, timestamp: i64, previous_hash: &str, patient: Patient) {
         //implement mining algorithm (need nonce)
     }
@@ -121,7 +138,7 @@ fn generate_hash(id: u64, previous_hash: String, timestamp: u64) -> String {
 
 fn hash_to_binary(curr_hash: &[u8]) -> String {
     let mut binary: String;
-    for character in hash {
+    for character in curr_hash {
         binary += &format!("{:b}", character);
     }
     return binary;
@@ -129,4 +146,8 @@ fn hash_to_binary(curr_hash: &[u8]) -> String {
 
 fn generate_nonce() -> u64 {
     //Impl random num generator
+    let mut rng = rand::thread_rng();
+    
+    let random_number_64: u64 = rng.gen();
+    return random_number_64;
 }
