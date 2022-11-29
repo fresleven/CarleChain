@@ -49,7 +49,7 @@ impl Blockchain {
         self.add_patient_struct(Patient{patient_id, age, patient_name})
     }
 
-    fn add_patient_struct(&mut self, patient: Patient) {
+    pub fn add_patient_struct(&mut self, patient: Patient) {
         if self.blocks.is_empty() {
             self.genesis(patient)
         }
@@ -108,7 +108,7 @@ impl Blockchain {
             return Err(BlockError::InvalidPreviousHash);
         } else if !hash_to_binary(&hex::decode(&block.hash).unwrap()).starts_with(DIFFICULTY_PREFIX) {
             return Err(BlockError::InvalidPrefixHash);
-        } else if block.id -1 != curr_last_block.id {
+        } else if block.id - 1 != curr_last_block.id {
             return Err(BlockError::InvalidID);
         } else if hex::encode(generate_hash(block.id, block.previous_hash.clone(), block.timestamp)) != block.hash {
             return Err(BlockError::IncorrectHash);
@@ -144,7 +144,7 @@ fn generate_hash(id: u64, previous_hash: String, timestamp: i64) -> String {
     });
     let mut hasher = Sha256::new();
     hasher.update(data.to_string().as_bytes());
-    return str::from_utf8(&hasher.finalize().as_slice().to_owned()).unwrap().to_string();
+    return String::from_utf8_lossy(&hasher.finalize().as_slice().to_owned().clone()).to_string();
 }
 
 fn hash_to_binary(curr_hash: &[u8]) -> String {
@@ -157,8 +157,39 @@ fn hash_to_binary(curr_hash: &[u8]) -> String {
 
 fn generate_nonce() -> u64 {
     //Impl random num generator
-    let mut rng = rand::thread_rng();
+    let mut rng: ThreadRng = rand::thread_rng();
     
     let random_number_64: u64 = rng.gen();
     return random_number_64;
+}
+
+#[cfg(test)]
+
+mod test {
+    use super::*;
+    use std::collections::HashSet;
+
+    #[test]
+    fn test_generate_hash() {
+        assert_eq!(generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953), 
+            generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953));
+        assert_ne!(generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953), 
+            generate_hash(002, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953));
+        assert_ne!(generate_hash(000, "".to_string(), 0), generate_hash(001, "a".to_string(), 1));
+    }
+
+    #[test]
+    fn hash_to_binary_test() { // I'll leave this to Ayush to implement
+        let hash_1: String = generate_hash(000, "".to_string(), 0);
+        assert_eq!("", "");
+    }
+
+    #[test]
+    fn generate_nonce_test() {
+        let mut nonces: HashSet<u64> = HashSet::new();
+        for _i in 0..100 {
+            nonces.insert(generate_nonce());
+        }
+        assert_eq!(nonces.len(), 100);
+    }
 }
