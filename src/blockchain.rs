@@ -97,11 +97,7 @@ impl Blockchain {
         let patient_info = patient;
         let previous_hash = &self.blocks.last().expect("Blockchain is not empty").hash;
         let nonce = generate_nonce();
-<<<<<<< HEAD
         // println!("{}, {}, {:?}, {}, {}, {},", id, timestamp, patient_info, previous_hash, hash, nonce);
-=======
-        let hash = generate_hash(id, previous_hash.clone(), timestamp, nonce, patient_info.patient_name.clone());
->>>>>>> refs/remotes/origin/main
         Block {id, hash, previous_hash : previous_hash.clone(), timestamp, nonce, patient_info}
     }
 
@@ -149,10 +145,6 @@ impl Blockchain {
         return true;
     }
 
-<<<<<<< HEAD
-    fn mine_block(id: u64, timestamp: i64, previous_hash: &str, patient: Patient) {
-        //Impl mining algorithm (need nonce)
-=======
     fn mine_block(id: u64, timestamp: i64, previous_hash: &str, patient_name: &str) -> (u64, String) {
         let mut nonce = generate_nonce();
         loop {
@@ -163,7 +155,6 @@ impl Blockchain {
             }
             nonce = generate_nonce();
         }
->>>>>>> refs/remotes/origin/main
     }
 }
 
@@ -213,17 +204,11 @@ mod test {
     }
 
     #[test]
-<<<<<<< HEAD
-    fn hash_to_binary_test() { // I'll leave this to Ayush to test
-        let hash_1: String = generate_hash(000, "".to_string(), 0);
-        assert_eq!("", "");
-=======
     fn hash_to_binary_test() { // I'll leave this to Ayush to implement
         let hash_1: String = generate_hash(000, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 0, 0, "Robert IV".to_string());
         let hash_2: String = generate_hash(123, "0000f816a87f806bb0073dcf026a64fb40c946b5abee2573702828694d5b4c43".to_string(), 4, 4, "Robert V".to_string());
         assert_eq!(hash_to_binary(&hash_1.as_bytes()), "1110111110111111101111011010000100001011101111101111111011110110010011110111101011011110101001110111110111111101111011110111110111111101111011101000110000111111001110111100111110111110111111101111011101101101110111110111111101111011001001101111111001010101110011110111110111111101111011110111110111111101111011101010111011111011111110111101101111011101111101111111011110111001111110".to_string());
         assert_eq!(hash_to_binary(&hash_2.as_bytes()), "1110111110111111101111011010111101011111011111011111110111101101110111110111111101111011110111110111111101111011110111110111111101111011110111110111111101111011000111001111011111011111110111101111110111101111101111111011110111110100011101111101111111011110111101111101111111011110111011001110111110111111101111011110111110111111101111011110111110111111101111011110111110111111101111011110111110111111101111011111011111011111110111101101111110111110111111101111011010011111111000".to_string());
->>>>>>> refs/remotes/origin/main
     }
 
     #[test]
