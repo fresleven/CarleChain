@@ -97,6 +97,7 @@ impl Blockchain {
         let patient_info = patient;
         let previous_hash = &self.blocks.last().expect("Blockchain is not empty").hash;
         let nonce = generate_nonce();
+        let hash = generate_hash(id, previous_hash.clone(), timestamp, nonce, patient_info.patient_name.clone());
         // println!("{}, {}, {:?}, {}, {}, {},", id, timestamp, patient_info, previous_hash, hash, nonce);
         Block {id, hash, previous_hash : previous_hash.clone(), timestamp, nonce, patient_info}
     }
