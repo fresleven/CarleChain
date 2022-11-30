@@ -1,4 +1,5 @@
 extern crate hex;
+extern crate csv;
 
 use std::str;
 use log::error;
@@ -6,6 +7,7 @@ use chrono::Utc;
 use sha2::{Sha256, Digest};
 use rand::prelude::*;
 use serde::{Serialize, Deserialize};
+use std::error::Error;
 
 const DIFFICULTY_PREFIX: &str = "000";
 
@@ -18,6 +20,7 @@ pub enum BlockError {
     IncorrectHash,
 }
 
+#[derive(Debug)]
 pub struct Blockchain {
     pub blocks: Vec<Block>,
 }
@@ -43,6 +46,18 @@ pub struct Patient {
 impl Blockchain {
     pub fn new() -> Self {
         Self { blocks: vec![] }
+    }
+
+    pub fn csv_to_blockchain(&mut self, file_path_: &String) -> Result<(), Box<dyn Error>> {
+        let mut reader = csv::Reader::from_path(file_path_)?;
+        let mut counter = 0;
+        for result in reader.records() {
+            let record = result?;
+            // println!("{}, {:?}, {:?}", counter, record[8].parse::<u64>().unwrap(), record[0].to_string());
+            self.add_patient(counter, record[8].parse::<u64>().unwrap(), record[0].to_string());
+            counter += 1;
+        }
+        return Ok(());
     }
 
     pub fn add_patient(&mut self, patient_id: u64, age: u64, patient_name: String) {
@@ -76,13 +91,14 @@ impl Blockchain {
         self.try_add_block(block, curr_last_block);
     }
 
-    pub fn create_block(&mut self, patient: Patient) -> Block {
+    fn create_block(&mut self, patient: Patient) -> Block {
         let id = self.blocks.last().expect("Blockchain is not empty").id + 1;
         let timestamp = Utc::now().timestamp();
         let patient_info = patient;
         let previous_hash = &self.blocks.last().expect("Blockchain is not empty").hash;
         let hash = generate_hash(id, previous_hash.clone(), timestamp);
         let nonce = generate_nonce();
+        // println!("{}, {}, {:?}, {}, {}, {},", id, timestamp, patient_info, previous_hash, hash, nonce);
         Block {id, hash, previous_hash : previous_hash.clone(), timestamp, nonce, patient_info}
     }
 
@@ -131,7 +147,7 @@ impl Blockchain {
     }
 
     fn mine_block(id: u64, timestamp: i64, previous_hash: &str, patient: Patient) {
-        //implement mining algorithm (need nonce)
+        //Impl mining algorithm (need nonce)
     }
 }
 
@@ -144,7 +160,7 @@ fn generate_hash(id: u64, previous_hash: String, timestamp: i64) -> String {
     });
     let mut hasher = Sha256::new();
     hasher.update(data.to_string().as_bytes());
-    return String::from_utf8_lossy(&hasher.finalize().as_slice().to_owned().clone()).to_string();
+    return hex::encode(hasher.finalize().as_slice().to_owned());
 }
 
 fn hash_to_binary(curr_hash: &[u8]) -> String {
@@ -179,7 +195,7 @@ mod test {
     }
 
     #[test]
-    fn hash_to_binary_test() { // I'll leave this to Ayush to implement
+    fn hash_to_binary_test() { // I'll leave this to Ayush to test
         let hash_1: String = generate_hash(000, "".to_string(), 0);
         assert_eq!("", "");
     }
@@ -191,5 +207,30 @@ mod test {
             nonces.insert(generate_nonce());
         }
         assert_eq!(nonces.len(), 100);
+    }
+
+    #[test]
+    fn add_patient_test() {
+        todo!();
+    }
+
+    #[test]
+    fn add_patient_struct_test() {
+        todo!();
+    }
+
+    #[test]
+    fn validate_block_test() {
+        todo!();
+    }
+
+    #[test]
+    fn validate_chain_test() {
+        todo!();
+    }
+
+    #[test]
+    fn mining_block_test() {
+        todo!();
     }
 }
