@@ -1,5 +1,4 @@
 mod blockchain;
-
 use blockchain::Blockchain;
 
 fn main() {

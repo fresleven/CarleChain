@@ -7,7 +7,7 @@ use sha2::{Sha256, Digest};
 use rand::prelude::*;
 use serde::{Serialize, Deserialize};
 
-const DIFFICULTY_PREFIX: &str = "000";
+const DIFFICULTY_PREFIX: &str = "00";
 
 #[derive(Debug)]
 pub enum BlockError {
@@ -131,14 +131,14 @@ impl Blockchain {
     }
 
     fn mine_block(id: u64, timestamp: i64, previous_hash: &str, patient_name: &str) -> (u64, String) {
-        let mut nonce = 0;
+        let mut nonce = generate_nonce();
         loop {
             let hash = generate_hash(id, previous_hash.to_string(), timestamp, nonce, patient_name.to_string());
             let binary_hash = hash_to_binary(&hash.as_bytes());
             if binary_hash.starts_with(DIFFICULTY_PREFIX) {
                 return (nonce, hex::encode(hash));
             }
-            nonce += 1;
+            nonce = generate_nonce();
         }
     }
 }
@@ -181,17 +181,19 @@ mod test {
 
     #[test]
     fn test_generate_hash() {
-        assert_eq!(generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953), 
-            generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953));
-        assert_ne!(generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953), 
-            generate_hash(002, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953));
-        assert_ne!(generate_hash(000, "".to_string(), 0), generate_hash(001, "a".to_string(), 1));
+        assert_eq!(generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953, 0, "Robert IV".to_string()), 
+            generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953, 0, "Robert IV".to_string()));
+        assert_ne!(generate_hash(001, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953, 0, "Robert IV".to_string()), 
+            generate_hash(002, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 1669749953, 0, "Robert IV".to_string()));
+        assert_ne!(generate_hash(000, "".to_string(), 0, 0, "Robert IV".to_string()), generate_hash(001, "a".to_string(), 1, 0, "Robert IV".to_string()));
     }
 
     #[test]
     fn hash_to_binary_test() { // I'll leave this to Ayush to implement
-        let hash_1: String = generate_hash(000, "".to_string(), 0);
-        assert_eq!("", "");
+        let hash_1: String = generate_hash(000, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(), 0, 0, "Robert IV".to_string());
+        let hash_2: String = generate_hash(123, "0000f816a87f806bb0073dcf026a64fb40c946b5abee2573702828694d5b4c43".to_string(), 4, 4, "Robert V".to_string());
+        assert_eq!(hash_to_binary(&hash_1.as_bytes()), "1110111110111111101111011010000100001011101111101111111011110110010011110111101011011110101001110111110111111101111011110111110111111101111011101000110000111111001110111100111110111110111111101111011101101101110111110111111101111011001001101111111001010101110011110111110111111101111011110111110111111101111011101010111011111011111110111101101111011101111101111111011110111001111110".to_string());
+        assert_eq!(hash_to_binary(&hash_2.as_bytes()), "1110111110111111101111011010111101011111011111011111110111101101110111110111111101111011110111110111111101111011110111110111111101111011110111110111111101111011000111001111011111011111110111101111110111101111101111111011110111110100011101111101111111011110111101111101111111011110111011001110111110111111101111011110111110111111101111011110111110111111101111011110111110111111101111011110111110111111101111011111011111011111110111101101111110111110111111101111011010011111111000".to_string());
     }
 
     #[test]
