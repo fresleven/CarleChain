@@ -94,7 +94,7 @@ impl Blockchain {
         let patient_info = patient;
         let previous_hash = &self.blocks.last().expect("Blockchain is not empty").hash;
         let (nonce, hash) = mine_block(id, timestamp, previous_hash.as_str(), patient_info.patient_name.as_str());
-        println!("{}, {}, {:?}, {}, {}, {},", id, timestamp, patient_info, previous_hash, hash, nonce);
+        println!("{:?},\nPrevious Hash: {},\nHash: {},\nNonce: {}\n", patient_info, previous_hash, hash, nonce);
         Block {id, hash, previous_hash : previous_hash.clone(), timestamp, nonce, patient_info}
     }
 
