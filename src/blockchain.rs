@@ -1,6 +1,3 @@
-extern crate hex;
-extern crate csv;
-
 use std::str;
 use log::error;
 use chrono::Utc;
@@ -95,7 +92,7 @@ impl Blockchain {
         let previous_hash = &self.blocks.last().expect("Blockchain is not empty").hash;
         let (nonce, hash) = mine_block(id, timestamp, previous_hash.as_str(), patient_info.patient_name.as_str());
         println!("{:?},\nPrevious Hash: {},\nHash: {},\nNonce: {}\n", patient_info, previous_hash, hash, nonce);
-        Block {id, hash, previous_hash : previous_hash.clone(), timestamp, nonce, patient_info}
+        return Block {id, hash, previous_hash : previous_hash.clone(), timestamp, nonce, patient_info};
     }
 
     fn try_add_block(&mut self, block: Block, curr_last_block: Block) {
@@ -114,7 +111,7 @@ impl Blockchain {
     }
 
     fn validate_block(&mut self, block: &Block, curr_last_block: &Block) -> Result<bool, BlockError> {
-        if curr_last_block.hash != block.previous_hash{
+        if curr_last_block.hash != block.previous_hash {
             return Err(BlockError::InvalidPreviousHash);
         } else if block.id - 1 != curr_last_block.id {
             return Err(BlockError::InvalidID);
@@ -142,7 +139,7 @@ fn generate_hash(id: u64, previous_hash: String, timestamp: i64, nonce: u64, pat
     let data = serde_json::json!({
         "id": id, 
         "previous_hash": previous_hash,
-        "0": nonce,
+        "nonce": nonce,
         "timestamp": timestamp,
         "patient_name": patient_name
     });
