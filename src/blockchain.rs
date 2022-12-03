@@ -44,11 +44,29 @@ impl Blockchain {
     }
 
     pub fn csv_to_blockchain(&mut self, file_path_: &String) -> Result<(), Box<dyn Error>> {
+        if !self.blocks.is_empty() { panic!("cannot call on non-empty blockchain!"); }
         let mut reader = csv::Reader::from_path(file_path_)?;
         let mut counter = 0;
+        // println!("{:?}", reader.records().nth(1));
         for result in reader.records() {
             let record = result?;
-            self.add_patient(counter, record[8].parse::<u64>().unwrap(), record[0].to_string());
+            self.add_patient(counter, record[8].parse::<u64>().unwrap(), record[0].to_string()); // patient_id, age, patient_name
+            counter += 1;
+        }
+        return Ok(());
+    }
+
+    pub fn csv_to_blockchain_range(&mut self, file_path_: &String, start: usize, length: usize) -> Result<(), Box<dyn Error>> {
+        if !self.blocks.is_empty() { panic!("cannot call on non-empty blockchain!"); }
+        let mut reader = csv::Reader::from_path(file_path_)?;
+        let mut counter = 0;
+        let first = reader.records().nth(start).unwrap()?;
+        self.add_patient(counter, first[8].parse::<u64>().unwrap(), first[0].to_string()); // patient_id, age, patient_name
+        counter += 1;
+
+        for _ in 0..length-1 {
+            let record = reader.records().next().unwrap()?;
+            self.add_patient(counter, record[8].parse::<u64>().unwrap(), record[0].to_string()); // patient_id, age, patient_name
             counter += 1;
         }
         return Ok(());
@@ -68,13 +86,21 @@ impl Blockchain {
     }
 
     fn genesis(&mut self, patient: Patient) {
+        let id = 0;
+        let timestamp = Utc::now().timestamp();
+        let previous_hash = String::from("genesis");
+        let patient_info = patient;
+        let nonce = 2836;
+        let hash = "0000f816a87f806bb0073dcf026a64fb40c946b5abee2573702828694d5b4c43".to_string();
+        println!("{:?},\nPrevious Hash: {},\nHash: {},\nNonce: {}\n", patient_info, previous_hash, hash, nonce);
+
         let genesis_block = Block {
-            id: 0,
-            timestamp: Utc::now().timestamp(),
-            previous_hash: String::from("genesis"),
-            patient_info: patient,
-            nonce: 2836,
-            hash: "0000f816a87f806bb0073dcf026a64fb40c946b5abee2573702828694d5b4c43".to_string(),
+            id: id,
+            timestamp: timestamp,
+            previous_hash: previous_hash,
+            patient_info: patient_info,
+            nonce: nonce,
+            hash: hash
         };
         self.blocks.push(genesis_block);
     }
@@ -123,7 +149,8 @@ impl Blockchain {
         return Ok(true);
     }
 
-    fn validate_chain(&mut self, chain: &[Block]) -> bool {
+    pub fn validate_chain(&mut self) -> bool {
+        let chain = self.blocks.clone();
         for i in 1..chain.len() {
             let curr = chain.get(i).expect("in range");
             let prev = chain.get(i - 1).expect("in range");
