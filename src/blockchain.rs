@@ -5,7 +5,9 @@ use sha2::{Sha256, Digest};
 use rand::prelude::*;
 use serde::{Serialize, Deserialize};
 use std::error::Error;
-
+use std::sync::{mpsc, mpsc::Receiver};
+use std::thread;
+use std::thread::JoinHandle;
 const DIFFICULTY_PREFIX: &str = "00000";
 
 #[derive(Debug)]
@@ -19,6 +21,7 @@ pub enum BlockError {
 #[derive(Debug)]
 pub struct Blockchain {
     pub blocks: Vec<Block>,
+    
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -33,31 +36,59 @@ pub struct Block {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Patient {
-    pub patient_id: u64,
-    pub age: u64,
-    pub patient_name: String,
+    pub id: u64,
+    pub sex: char,
+    patient_type: u8,
+    entry_date: i64,
+    date_symptoms: i64,
+    date_died: i64,
+    intubed: u8,
+    pneumonia: u8,
+    age: i64,
+    pregnancy: u8,
+    diabetes: u8,
+    copd: u8,
+    asthma: u8,
+    inmsupr: u8,
+    hypertension: u8,
+    other_disease: u8,
+    cardiovascular: u8,
+    obesity: u8,
+    renal_chronic: u8,
+    tobacco: u8,
+    contact_other_covid: u8,
+    covid_res: u8,
+    icu: u8,
 }
 
 impl Blockchain {
     pub fn new() -> Self {
         Self { blocks: vec![] }
     }
+    pub fn split_into_chunks(&self, file_path_: &String, num_chunks: usize) 
+            -> Vec<Vec<csv::StringRecord>> {
+        let mut reader = csv::Reader::from_path(file_path_).unwrap();
+        let mut chunks: Vec<Vec<csv::StringRecord>> = Vec::new();
+        for (idx, record) in reader.records().enumerate() {
+            let chunk_idx = idx % num_chunks;
+            chunks.get_mut(chunk_idx).unwrap().push(record.unwrap().clone());
+        }
+        return chunks
+    }
 
+    pub fn multi_threaded_reader(&self, file_path_: &String, num_chunks: usize) -> (Vec<JoinHandle<()>>, Receiver<()>) {
+
+    }
     pub fn csv_to_blockchain(&mut self, file_path_: &String) -> Result<(), Box<dyn Error>> {
         if !self.blocks.is_empty() { panic!("cannot call on non-empty blockchain!"); }
         let mut reader = csv::Reader::from_path(file_path_)?;
-        let mut counter = 0;
-        // println!("{:?}", reader.records().nth(1));
-        for result in reader.records() {
-            let record = result?;
-            self.add_patient(counter, record[8].parse::<u64>().unwrap(), record[0].to_string()); // patient_id, age, patient_name
-            counter += 1;
-        }
+        let num_chunks: usize = 8;
+        self.split_into_chunks(file_path_, 8);
+
         return Ok(());
     }
 
     pub fn csv_to_blockchain_range(&mut self, file_path_: &String, start: usize, length: usize) -> Result<(), Box<dyn Error>> {
-        if !self.blocks.is_empty() { panic!("cannot call on non-empty blockchain!"); }
         let mut reader = csv::Reader::from_path(file_path_)?;
         let mut counter = 0;
         let first = reader.records().nth(start).unwrap()?;
@@ -72,8 +103,9 @@ impl Blockchain {
         return Ok(());
     }
 
-    pub fn add_patient(&mut self, patient_id: u64, age: u64, patient_name: String) {
-        self.add_patient_struct(Patient{patient_id, age, patient_name})
+    pub fn add_patient(&mut self, id: u64, sex: char, patient_type: u8, entry_date: i64, date_symptoms: i64, date_died: i64, intubated: u8, pneumonia: u8, age: i64, pregnancy: u8, diabetes: u8, copd: u8, asthma: u8, inmsupr: u8, hypertension: u8, other_disease: u8, cardiovascular: u8, obesity: u8, renal_chronic: u8, tobacco: u8, contact_other_covid: u8, covid_res: u8, icu: u8) {
+        self.add_patient_struct(Patient{id,sex,patient_type,entry_date,date_symptoms,date_died,intubed,pneumonia,age,pregnancy,diabetes,copd,asthma,inmsupr,hypertension,other_disease,cardiovascular,obesity,renal_chronic,tobacco,contact_other_covid,covid_res,icu
+        })
     }
 
     pub fn add_patient_struct(&mut self, patient: Patient) {
