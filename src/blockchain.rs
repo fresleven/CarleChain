@@ -11,7 +11,7 @@ use ndarray::{Array1, Array2};
 
 use logreg::logistic_regression;
 
-const DIFFICULTY_PREFIX: &str = "00";
+const DIFFICULTY_PREFIX: &str = "00000";
 
 #[derive(Debug)]
 pub enum BlockError {
