@@ -1,4 +1,4 @@
-// Based on code found here: https://paulkernfeld.com/2018/07/01/logistic-regression-in-rust.html
+// Reference code found here: https://paulkernfeld.com/2018/07/01/logistic-regression-in-rust.html
 
 use ndarray::{Array1, Array2};
 

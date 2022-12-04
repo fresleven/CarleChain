@@ -11,7 +11,7 @@ use ndarray::{Array1, Array2};
 
 use logreg::logistic_regression;
 
-const DIFFICULTY_PREFIX: &str = "00000";
+const DIFFICULTY_PREFIX: &str = "00";
 
 #[derive(Debug)]
 pub enum BlockError {
@@ -76,23 +76,20 @@ impl Blockchain {
         if !self.blocks.is_empty() { panic!("cannot call on non-empty blockchain!"); }
         let mut reader = csv::Reader::from_path(file_path_)?;
         let mut counter = 0;
-        let first = reader.records().nth(start).unwrap()?;
-        let first_died: u32 = if first[5].to_string() == "9999-99-99".to_string() { 0 } else { 1 };
-        self.add_patient(
-            counter, first[8].parse::<u64>().unwrap(), first[0].to_string(), first_died, 
-            first[1].parse::<u32>().unwrap() - 1, first[7].parse::<u32>().unwrap() % 2, first[10].parse::<u32>().unwrap() % 2, 
-            first[14].parse::<u32>().unwrap() % 2, first[19].parse::<u32>().unwrap() % 2
-        );
-        counter += 1;
+        let slice = &reader.records().collect::<Vec<Result<csv::StringRecord, csv::Error>>>()[start..start + length];
 
-        for _ in 0..length-1 {
-            let record = reader.records().next().unwrap()?;
-            let died: u32 = if record[5].to_string() == "9999-99-99".to_string() { 0 } else { 1 };
-            self.add_patient(
-                counter, record[8].parse::<u64>().unwrap(), record[0].to_string(), died, 
-                record[1].parse::<u32>().unwrap() - 1, record[7].parse::<u32>().unwrap() % 2, record[10].parse::<u32>().unwrap() % 2, 
-                record[14].parse::<u32>().unwrap() % 2, record[19].parse::<u32>().unwrap() % 2
-            );
+        for rec in slice {
+            match rec {
+                Ok(record) => {
+                    let died: u32 = if record[5].to_string() == "9999-99-99".to_string() { 0 } else { 1 };
+                    self.add_patient(
+                        counter, record[8].parse::<u64>().unwrap(), record[0].to_string(), died, 
+                        record[1].parse::<u32>().unwrap() - 1, record[7].parse::<u32>().unwrap() % 2, record[10].parse::<u32>().unwrap() % 2, 
+                        record[14].parse::<u32>().unwrap() % 2, record[19].parse::<u32>().unwrap() % 2
+                    );
+                },
+                Err(_) => panic!("an error occurred")
+            }
             counter += 1;
         }
         return Ok(());
