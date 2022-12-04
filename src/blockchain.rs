@@ -1,3 +1,5 @@
+use crate::logreg;
+
 use std::str;
 use log::error;
 use chrono::Utc;
@@ -5,6 +7,9 @@ use sha2::{Sha256, Digest};
 use rand::prelude::*;
 use serde::{Serialize, Deserialize};
 use std::error::Error;
+use ndarray::{Array1, Array2};
+
+use logreg::logistic_regression;
 
 const DIFFICULTY_PREFIX: &str = "00000";
 
@@ -36,6 +41,13 @@ pub struct Patient {
     pub patient_id: u64,
     pub age: u64,
     pub patient_name: String,
+
+    pub died: u32,
+    pub sex: u32,
+    pub pneumonia: u32,
+    pub diabetes: u32,
+    pub hypertension: u32,
+    pub tobacco: u32
 }
 
 impl Blockchain {
@@ -47,10 +59,14 @@ impl Blockchain {
         if !self.blocks.is_empty() { panic!("cannot call on non-empty blockchain!"); }
         let mut reader = csv::Reader::from_path(file_path_)?;
         let mut counter = 0;
-        // println!("{:?}", reader.records().nth(1));
         for result in reader.records() {
             let record = result?;
-            self.add_patient(counter, record[8].parse::<u64>().unwrap(), record[0].to_string()); // patient_id, age, patient_name
+            let died: u32 = if record[5].to_string() == "9999-99-99".to_string() { 0 } else { 1 };
+            self.add_patient(
+                counter, record[8].parse::<u64>().unwrap(), record[0].to_string(), died, 
+                record[1].parse::<u32>().unwrap() - 1, record[7].parse::<u32>().unwrap() % 2, record[10].parse::<u32>().unwrap() % 2, 
+                record[14].parse::<u32>().unwrap() % 2, record[19].parse::<u32>().unwrap() % 2
+            );
             counter += 1;
         }
         return Ok(());
@@ -61,19 +77,30 @@ impl Blockchain {
         let mut reader = csv::Reader::from_path(file_path_)?;
         let mut counter = 0;
         let first = reader.records().nth(start).unwrap()?;
-        self.add_patient(counter, first[8].parse::<u64>().unwrap(), first[0].to_string()); // patient_id, age, patient_name
+        let first_died: u32 = if first[5].to_string() == "9999-99-99".to_string() { 0 } else { 1 };
+        self.add_patient(
+            counter, first[8].parse::<u64>().unwrap(), first[0].to_string(), first_died, 
+            first[1].parse::<u32>().unwrap() - 1, first[7].parse::<u32>().unwrap() % 2, first[10].parse::<u32>().unwrap() % 2, 
+            first[14].parse::<u32>().unwrap() % 2, first[19].parse::<u32>().unwrap() % 2
+        );
         counter += 1;
 
         for _ in 0..length-1 {
             let record = reader.records().next().unwrap()?;
-            self.add_patient(counter, record[8].parse::<u64>().unwrap(), record[0].to_string()); // patient_id, age, patient_name
+            let died: u32 = if record[5].to_string() == "9999-99-99".to_string() { 0 } else { 1 };
+            self.add_patient(
+                counter, record[8].parse::<u64>().unwrap(), record[0].to_string(), died, 
+                record[1].parse::<u32>().unwrap() - 1, record[7].parse::<u32>().unwrap() % 2, record[10].parse::<u32>().unwrap() % 2, 
+                record[14].parse::<u32>().unwrap() % 2, record[19].parse::<u32>().unwrap() % 2
+            );
             counter += 1;
         }
         return Ok(());
     }
 
-    pub fn add_patient(&mut self, patient_id: u64, age: u64, patient_name: String) {
-        self.add_patient_struct(Patient{patient_id, age, patient_name})
+    pub fn add_patient(&mut self, patient_id: u64, age: u64, patient_name: String, died: u32,
+      sex: u32, pneumonia: u32, diabetes: u32, hypertension: u32, tobacco: u32) {
+        self.add_patient_struct(Patient{patient_id, age, patient_name, died, sex, pneumonia, diabetes, hypertension, tobacco})
     }
 
     pub fn add_patient_struct(&mut self, patient: Patient) {
@@ -159,6 +186,27 @@ impl Blockchain {
             }
         }
         return true;
+    }
+
+    pub fn run_regression(&mut self) -> Array1<f64> {
+        let chain = self.blocks.clone();
+        let rows = chain.len();
+        if rows < 6 {
+            panic!("too few rows to run regression!")
+        }
+        let mut x_arr = Array2::<f64>::zeros((rows, 6));
+        let mut y_arr = Array1::<f64>::zeros(rows);
+        for (idx, block) in chain.iter().enumerate() {
+            let patient = &block.patient_info;
+            y_arr[idx] = patient.died as f64;
+            x_arr[[idx,0]] = 1.0;
+            x_arr[[idx,1]] = patient.sex as f64;
+            x_arr[[idx,2]] = patient.pneumonia as f64;
+            x_arr[[idx,3]] = patient.diabetes as f64;
+            x_arr[[idx,4]] = patient.hypertension as f64;
+            x_arr[[idx,5]] = patient.tobacco as f64;
+        }
+        logistic_regression(&x_arr, &y_arr)
     }
 }
 
