@@ -1,1 +1,0 @@
-/mnt/c/Users/lukep/OneDrive/Documents/rust128/final/target/debug/CarleChain: /mnt/c/Users/lukep/OneDrive/Documents/rust128/final/src/blockchain.rs /mnt/c/Users/lukep/OneDrive/Documents/rust128/final/src/logreg.rs /mnt/c/Users/lukep/OneDrive/Documents/rust128/final/src/main.rs
