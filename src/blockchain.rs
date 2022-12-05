@@ -1,47 +1,23 @@
 use crate::logreg;
 
-use std::str;
 use csv::StringRecord;
+
 use log::error;
 use chrono::Utc;
 use sha2::{Sha256, Digest};
 use rand::prelude::*;
 use serde::{Serialize, Deserialize};
 use std::error::Error;
-use ndarray::{Array1, Array2};
 
+use ndarray::{Array1, Array2};
 use logreg::logistic_regression;
+
 use std::sync::{mpsc, mpsc::Receiver};
 use std::thread;
 use std::thread::JoinHandle;
-const DIFFICULTY_PREFIX: &str = "00";
 
-#[derive(Debug)]
-//Enum used to validate block
-pub enum BlockError {
-    InvalidPreviousHash,
-    InvalidPatient,
-    InvalidID,
-    IncorrectHash,
-}
+const DIFFICULTY_PREFIX: &str = "00000";
 
-#[derive(Debug)]
-//blocks represents entire ledger
-pub struct Blockchain {
-    pub blocks: Vec<Block>,
-    
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-//Single block structure
-pub struct Block {
-    pub id: u64,
-    pub hash: String,
-    pub previous_hash: String,
-    pub timestamp: i64,
-    pub nonce: u64,
-    pub patient_info : Patient
-}
 //Structure of encapsulated patient data
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Patient {
@@ -70,6 +46,33 @@ pub struct Patient {
     icu: u8,
     if_died: u8,
 }
+
+#[derive(Debug)]
+//Enum used to validate block
+pub enum BlockError {
+    InvalidPreviousHash,
+    InvalidPatient,
+    InvalidID,
+    IncorrectHash
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+//Single block structure
+pub struct Block {
+    pub id: u64,
+    pub hash: String,
+    pub previous_hash: String,
+    pub timestamp: i64,
+    pub nonce: u64,
+    pub patient_info: Patient
+}
+
+#[derive(Debug)]
+//blocks represents entire ledger
+pub struct Blockchain {
+    pub blocks: Vec<Block>
+}
+
 //Reads string given a vector of iterators to lines in the CSV
 pub fn string_reader(records: &Vec<StringRecord>) -> Vec<Patient> {
     let mut patients: Vec<Patient> = Vec::new();
@@ -78,13 +81,14 @@ pub fn string_reader(records: &Vec<StringRecord>) -> Vec<Patient> {
         let patient = Patient{id: record[0].parse::<String>().unwrap(), sex: record[1].parse::<char>().unwrap(), patient_type: record[2].parse::<u8>().unwrap(), entry_date: record[3].parse::<String>().unwrap(), date_symptoms: record[4].parse::<String>().unwrap(), date_died: record[5].parse::<String>().unwrap(), intubed: record[6].parse::<u8>().unwrap(), pneumonia: record[7].parse::<u8>().unwrap(), age: record[8].parse::<i64>().unwrap(), pregnancy: record[9].parse::<u8>().unwrap(), diabetes: record[10].parse::<u8>().unwrap(),copd: record[11].parse::<u8>().unwrap(), asthma: record[12].parse::<u8>().unwrap(), inmsupr: record[13].parse::<u8>().unwrap(), hypertension: record[14].parse::<u8>().unwrap(), other_disease: record[15].parse::<u8>().unwrap(), cardiovascular: record[16].parse::<u8>().unwrap(), obesity: record[17].parse::<u8>().unwrap(), renal_chronic: record[18].parse::<u8>().unwrap(), tobacco: record[19].parse::<u8>().unwrap(), contact_other_covid: record[20].parse::<u8>().unwrap(), covid_res: record[21].parse::<u64>().expect(&("COVID_RES record is an integer".to_string() + &record[21].to_string())), icu: record[22].parse::<u8>().expect(&("ICU record is an integer".to_string() + &record[22].to_string())), if_died: died};
         patients.push(patient);
     }
-    patients
+    return patients;
 }
 
 impl Blockchain {
     pub fn new() -> Self {
-        Self { blocks: vec![] }
+        return Self { blocks: vec![] };
     }
+
     //Given number of chunks, divides up csv lines accordingly
     pub fn split_into_chunks(&self, file_path_: &String, num_chunks: usize) 
             -> Vec<Vec<csv::StringRecord>> {
@@ -94,8 +98,9 @@ impl Blockchain {
             let chunk_idx = idx % num_chunks;
             chunks.get_mut(chunk_idx).unwrap().push(record.unwrap().clone());
         }
-        return chunks
+        return chunks;
     }
+
     //Returns a vector of join handles with each handle assigned a chunk
     pub fn multi_threaded_reader(&self, file_path_: &String, num_chunks: usize) -> (Vec<JoinHandle<()>>, Receiver<Vec<Patient>>) {
         let (tx,rx) = mpsc::channel();
@@ -110,8 +115,9 @@ impl Blockchain {
             });
             handles.push(h);
         }
-        (handles, rx)
+        return (handles, rx);
     }
+
     //Each thread returns a vector of patients after reading the csv in parallel. Adds each of the patients
     pub fn thread_reducer(& mut self, receivers: (Vec<JoinHandle<()>>, Receiver<Vec<Patient>>)) {
         let (_, results) = receivers;
@@ -121,18 +127,18 @@ impl Blockchain {
             }
         }
     }
+
     //Calls threading process
     pub fn csv_to_blockchain(&mut self, file_path_: &String) -> Result<(), Box<dyn Error>> {
         if !self.blocks.is_empty() { panic!("cannot call on non-empty blockchain!"); }
         let num_chunks: usize = 8;
         self.thread_reducer(self.multi_threaded_reader(file_path_, num_chunks));
-
         return Ok(());
     }
+
     //Single threaded approach to reading only a slice of the CSV.
     pub fn csv_to_blockchain_range(&mut self, file_path_: &String, start: usize, length: usize) -> Result<(), Box<dyn Error>> {
         let mut reader = csv::Reader::from_path(file_path_)?;
-        let mut counter = 0;
         let slice = &reader.records().collect::<Vec<Result<csv::StringRecord, csv::Error>>>()[start..start + length];
 
         for rec in slice {
@@ -144,24 +150,10 @@ impl Blockchain {
                 },
                 Err(_) => panic!("an error occurred")
             }
-            counter += 1;
         }
         return Ok(());
     }
-    //Given the fields for a patient, creates a patient of type Patient and adds them to the blockchain
-    pub fn add_patient(&mut self, id: String, sex: char, patient_type: u8, entry_date: String, date_symptoms: String, date_died: String, intubed: u8, pneumonia: u8, age: i64, pregnancy: u8, diabetes: u8, copd: u8, asthma: u8, inmsupr: u8, hypertension: u8, other_disease: u8, cardiovascular: u8, obesity: u8, renal_chronic: u8, tobacco: u8, contact_other_covid: u8, covid_res: u64, icu: u8, if_died: u8) {
-        self.add_patient_struct(Patient{id,sex,patient_type,entry_date,date_symptoms,date_died,intubed,pneumonia,age,pregnancy,diabetes,copd,asthma,inmsupr,hypertension,other_disease,cardiovascular,obesity,renal_chronic,tobacco,contact_other_covid,covid_res,icu, if_died
-        })
-    }
-    //Adds patient to blockchain
-    pub fn add_patient_struct(&mut self, patient: Patient) {
-        if self.blocks.is_empty() {
-            self.genesis(patient)
-        }
-        else {
-            self.add_patient_nonempty(patient)
-        }
-    }
+
     //Creates the first block in the blockchain and sets initialize hash
     fn genesis(&mut self, patient: Patient) {
         let id = 0;
@@ -182,12 +174,29 @@ impl Blockchain {
         };
         self.blocks.push(genesis_block);
     }
+
+    //Given the fields for a patient, creates a patient of type Patient and adds them to the blockchain
+    pub fn add_patient(&mut self, id: String, sex: char, patient_type: u8, entry_date: String, date_symptoms: String, date_died: String, intubed: u8, pneumonia: u8, age: i64, pregnancy: u8, diabetes: u8, copd: u8, asthma: u8, inmsupr: u8, hypertension: u8, other_disease: u8, cardiovascular: u8, obesity: u8, renal_chronic: u8, tobacco: u8, contact_other_covid: u8, covid_res: u64, icu: u8, if_died: u8) {
+        self.add_patient_struct(Patient{id,sex,patient_type,entry_date,date_symptoms,date_died,intubed,pneumonia,age,pregnancy,diabetes,copd,asthma,inmsupr,hypertension,other_disease,cardiovascular,obesity,renal_chronic,tobacco,contact_other_covid,covid_res,icu, if_died});
+    }
+
+    //Adds patient to blockchain
+    pub fn add_patient_struct(&mut self, patient: Patient) {
+        if self.blocks.is_empty() {
+            self.genesis(patient);
+        }
+        else {
+            self.add_patient_nonempty(patient);
+        }
+    }
+
     //Adds a patient when the blockchain is not empty
     fn add_patient_nonempty(&mut self, patient: Patient) {
         let block: Block = self.create_block(patient);
         let curr_last_block: Block = self.blocks.last().unwrap().clone();
         self.try_add_block(block, curr_last_block);
     }
+
     //Creates a block and ensures the block is mined
     fn create_block(&mut self, patient: Patient) -> Block {
         let id = self.blocks.last().expect("Blockchain is not empty").id + 1;
@@ -198,6 +207,7 @@ impl Blockchain {
         println!("{:?},\nPrevious Hash: {},\nHash: {},\nNonce: {}\n", patient_info, previous_hash, hash, nonce);
         return Block {id, hash, previous_hash : previous_hash.clone(), timestamp, nonce, patient_info};
     }
+
     //Adds a block given there is no issue with validation
     fn try_add_block(&mut self, block: Block, curr_last_block: Block) {
         let res: Result<bool, BlockError> = self.validate_block(&block, &curr_last_block);
@@ -213,6 +223,7 @@ impl Blockchain {
             }
         }
     }
+
     //Validates a block by checking id, previous hash, patient data, and current hash
     fn validate_block(&mut self, block: &Block, curr_last_block: &Block) -> Result<bool, BlockError> {
         if curr_last_block.hash != block.previous_hash {
@@ -226,6 +237,7 @@ impl Blockchain {
         }
         return Ok(true);
     }
+
     //Validates each block on the chain
     pub fn validate_chain(&mut self) -> bool {
         let chain = self.blocks.clone();
@@ -243,7 +255,7 @@ impl Blockchain {
         let chain = self.blocks.clone();
         let rows = chain.len();
         if rows < 6 {
-            panic!("too few rows to run regression!")
+            panic!("too few rows to run regression!");
         }
         let mut x_arr = Array2::<f64>::zeros((rows, 6));
         let mut y_arr = Array1::<f64>::zeros(rows);
@@ -257,9 +269,18 @@ impl Blockchain {
             x_arr[[idx,4]] = (patient.hypertension % 2) as f64;
             x_arr[[idx,5]] = (patient.tobacco % 2) as f64;
         }
-        logistic_regression(&x_arr, &y_arr)
+        return logistic_regression(&x_arr, &y_arr);
     }
 }
+
+//Uses RNG to generate nonce value
+fn generate_nonce() -> u64 {
+    let mut rng: ThreadRng = rand::thread_rng();
+    
+    let random_number_64: u64 = rng.gen();
+    return random_number_64;
+}
+
 //Generates a hash using SHA256 impl
 fn generate_hash(id: u64, previous_hash: String, timestamp: i64, nonce: u64, patient_id: String) -> String {
     let data = serde_json::json!({
@@ -273,13 +294,7 @@ fn generate_hash(id: u64, previous_hash: String, timestamp: i64, nonce: u64, pat
     hasher.update(data.to_string().as_bytes());
     return hex::encode(hasher.finalize().as_slice().to_owned());
 }
-//Uses RNG to generate nonce value
-fn generate_nonce() -> u64 {
-    let mut rng: ThreadRng = rand::thread_rng();
-    
-    let random_number_64: u64 = rng.gen();
-    return random_number_64;
-}
+
 //Mines a block and returns nonce and hash for specified difficulty 
 fn mine_block(id: u64, timestamp: i64, previous_hash: &str, patient_id: String) -> (u64, String) {
     let mut nonce = generate_nonce();
@@ -310,10 +325,10 @@ mod test {
     #[test]
     fn generate_nonce_test() {
         let mut nonces: HashSet<u64> = HashSet::new();
-        for _i in 0..100 {
+        for _i in 0..1000 {
             nonces.insert(generate_nonce());
         }
-        assert_eq!(nonces.len(), 100);
+        assert_eq!(nonces.len(), 1000);
     }
 
     #[test]
