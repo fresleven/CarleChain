@@ -14,7 +14,7 @@ use logreg::logistic_regression;
 use std::sync::{mpsc, mpsc::Receiver};
 use std::thread;
 use std::thread::JoinHandle;
-const DIFFICULTY_PREFIX: &str = "00000";
+const DIFFICULTY_PREFIX: &str = "00";
 
 #[derive(Debug)]
 //Enum used to validate block
@@ -139,7 +139,7 @@ impl Blockchain {
             match rec {
                 Ok(record) => {
                     let died: u8 = if record[5].to_string() == "9999-99-99".to_string() { 0 } else { 1 };
-                    self.add_patient(record[0].parse::<String>().unwrap(), record[1].parse::<char>().unwrap(), record[2].parse::<u8>().unwrap(), record[3].parse::<String>().unwrap(), record[4].parse::<String>().unwrap(), record[5].parse::<String>().unwrap(), record[6].parse::<u8>().unwrap(), record[7].parse::<u8>().unwrap(), record[8].parse::<i64>().unwrap(), record[9].parse::<u8>().unwrap(), record[10].parse::<u8>().unwrap(), record[11].parse::<u8>().unwrap(), record[12].parse::<u8>().unwrap(), record[13].parse::<u8>().unwrap(), record[14].parse::<u8>().unwrap(), record[15].parse::<u8>().unwrap(), record[16].parse::<u8>().unwrap(), record[17].parse::<u8>().unwrap(), record[18].parse::<u8>().unwrap(), record[19].parse::<u8>().unwrap(), record[20].parse::<u8>().unwrap(), record[21].parse::<u64>().unwrap(), record[22].parse::<u8>().unwrap());
+                    self.add_patient(record[0].parse::<String>().unwrap(), record[1].parse::<char>().unwrap(), record[2].parse::<u8>().unwrap(), record[3].parse::<String>().unwrap(), record[4].parse::<String>().unwrap(), record[5].parse::<String>().unwrap(), record[6].parse::<u8>().unwrap(), record[7].parse::<u8>().unwrap(), record[8].parse::<i64>().unwrap(), record[9].parse::<u8>().unwrap(), record[10].parse::<u8>().unwrap(), record[11].parse::<u8>().unwrap(), record[12].parse::<u8>().unwrap(), record[13].parse::<u8>().unwrap(), record[14].parse::<u8>().unwrap(), record[15].parse::<u8>().unwrap(), record[16].parse::<u8>().unwrap(), record[17].parse::<u8>().unwrap(), record[18].parse::<u8>().unwrap(), record[19].parse::<u8>().unwrap(), record[20].parse::<u8>().unwrap(), record[21].parse::<u64>().unwrap(), record[22].parse::<u8>().unwrap(), died);
 
                 },
                 Err(_) => panic!("an error occurred")
@@ -251,11 +251,11 @@ impl Blockchain {
             let patient = &block.patient_info;
             y_arr[idx] = patient.if_died as f64;
             x_arr[[idx,0]] = 1.0;
-            x_arr[[idx,1]] = patient.sex as f64;
-            x_arr[[idx,2]] = patient.pneumonia as f64;
-            x_arr[[idx,3]] = patient.diabetes as f64;
-            x_arr[[idx,4]] = patient.hypertension as f64;
-            x_arr[[idx,5]] = patient.tobacco as f64;
+            x_arr[[idx,1]] = if patient.sex == '2' { 1.0 } else { 0.0 };
+            x_arr[[idx,2]] = (patient.pneumonia % 2) as f64;
+            x_arr[[idx,3]] = (patient.diabetes % 2) as f64;
+            x_arr[[idx,4]] = (patient.hypertension % 2) as f64;
+            x_arr[[idx,5]] = (patient.tobacco % 2) as f64;
         }
         logistic_regression(&x_arr, &y_arr)
     }
