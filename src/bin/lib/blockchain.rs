@@ -1,5 +1,3 @@
-use crate::logreg;
-
 use csv::StringRecord;
 
 use log::error;
@@ -10,13 +8,17 @@ use serde::{Serialize, Deserialize};
 use std::error::Error;
 
 use ndarray::{Array1, Array2};
-use logreg::logistic_regression;
+use crate::logreg::logistic_regression;
 
 use std::sync::{mpsc, mpsc::Receiver};
 use std::thread;
 use std::thread::JoinHandle;
 
+use std::time::Duration;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+
 const DIFFICULTY_PREFIX: &str = "00000";
+const NUM_OF_ROWS_COVID: u64 = 566602;
 
 //Structure of encapsulated patient data
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -74,16 +76,21 @@ pub struct Blockchain {
 }
 
 //Reads string given a vector of iterators to lines in the CSV
-pub fn string_reader(records: &Vec<StringRecord>) -> Vec<Patient> {
+pub fn string_reader(records: &Vec<StringRecord>, pb: &ProgressBar) -> Vec<Patient> {
     let mut patients: Vec<Patient> = Vec::new();
-    for record in records {
+    for i in 0..records.len() {
+        let record = &records[i];
         let died: u8 = if record[5].to_string() == "9999-99-99".to_string() { 0 } else { 1 };
         let patient = Patient{id: record[0].parse::<String>().unwrap(), sex: record[1].parse::<char>().unwrap(), patient_type: record[2].parse::<u8>().unwrap(), entry_date: record[3].parse::<String>().unwrap(), date_symptoms: record[4].parse::<String>().unwrap(), date_died: record[5].parse::<String>().unwrap(), intubed: record[6].parse::<u8>().unwrap(), pneumonia: record[7].parse::<u8>().unwrap(), age: record[8].parse::<i64>().unwrap(), pregnancy: record[9].parse::<u8>().unwrap(), diabetes: record[10].parse::<u8>().unwrap(),copd: record[11].parse::<u8>().unwrap(), asthma: record[12].parse::<u8>().unwrap(), inmsupr: record[13].parse::<u8>().unwrap(), hypertension: record[14].parse::<u8>().unwrap(), other_disease: record[15].parse::<u8>().unwrap(), cardiovascular: record[16].parse::<u8>().unwrap(), obesity: record[17].parse::<u8>().unwrap(), renal_chronic: record[18].parse::<u8>().unwrap(), tobacco: record[19].parse::<u8>().unwrap(), contact_other_covid: record[20].parse::<u8>().unwrap(), covid_res: record[21].parse::<u64>().expect(&("COVID_RES record is an integer".to_string() + &record[21].to_string())), icu: record[22].parse::<u8>().expect(&("ICU record is an integer".to_string() + &record[22].to_string())), if_died: died};
         patients.push(patient);
+        pb.set_message(format!("item #{}", i + 1));
+        pb.inc(1);
+        thread::sleep(Duration::from_millis(5));
     }
     return patients;
 }
 
+#[allow(dead_code)]
 impl Blockchain {
     pub fn new() -> Self {
         return Self { blocks: vec![] };
@@ -106,26 +113,51 @@ impl Blockchain {
         let (tx,rx) = mpsc::channel();
         let mut handles = Vec::new();
         let chunks = self.split_into_chunks(file_path_, num_chunks);
+        
+        let m = MultiProgress::new();
+        let sty = ProgressStyle::with_template(
+            "[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}",
+        ).unwrap()
+        .progress_chars("##-");
+        let mut pb_vec: Vec<ProgressBar> = Vec::new();
+        for i in 0..num_chunks {
+            let pb = m.add(ProgressBar::new(chunks.get(i).unwrap().len().try_into().unwrap()));
+            pb.set_style(sty.clone());
+            pb_vec.push(pb);
+        }
+
+        println!("\nLOADING IN PATIENTS");
         for i in 0..num_chunks {
             let owned_chunk = chunks.get(i).unwrap().clone();
             let tx_clone = tx.clone();
+            
+            let m_clone = m.clone();
+            let pb_clone = pb_vec[i].clone();
             let h = thread::spawn(move || {
-                let result = string_reader(&owned_chunk);
+                let result = string_reader(&owned_chunk, &pb_clone);
+                m_clone.println("pb is done!").unwrap();
+                pb_clone.finish_with_message("done");
                 tx_clone.send(result).unwrap();
             });
+            
             handles.push(h);
         }
         return (handles, rx);
     }
 
     //Each thread returns a vector of patients after reading the csv in parallel. Adds each of the patients
-    pub fn thread_reducer(& mut self, receivers: (Vec<JoinHandle<()>>, Receiver<Vec<Patient>>)) {
+    pub fn thread_reducer(&mut self, receivers: (Vec<JoinHandle<()>>, Receiver<Vec<Patient>>)) {
         let (_, results) = receivers;
+        let pb = ProgressBar::new(NUM_OF_ROWS_COVID);
+
         while let Ok(patients) = results.recv() {
             for patient in patients {
                 self.add_patient_struct(patient);
+                pb.inc(1);
+                thread::sleep(Duration::from_millis(5));
             }
         }
+        pb.finish_with_message("done");
     }
 
     //Calls threading process
@@ -137,20 +169,28 @@ impl Blockchain {
     }
 
     //Single threaded approach to reading only a slice of the CSV.
-    pub fn csv_to_blockchain_range(&mut self, file_path_: &String, start: usize, length: usize) -> Result<(), Box<dyn Error>> {
+    pub fn csv_to_blockchain_range(&mut self, file_path_: &String, start: usize, length: usize) -> Result<(), Box<dyn Error>> {    
         let mut reader = csv::Reader::from_path(file_path_)?;
         let slice = &reader.records().collect::<Vec<Result<csv::StringRecord, csv::Error>>>()[start..start + length];
+        let pb = ProgressBar::new(length.try_into().unwrap());
+        let sty = ProgressStyle::with_template(
+            "[{elapsed_precise}] {bar:60.green} {pos:>7}/{len:7} {msg}",
+        ).unwrap();
+        pb.set_style(sty);
 
+        println!("\nCREATING BLOCKCHAIN FROM PATIENT {} TO {}", start, start + length - 1);
         for rec in slice {
             match rec {
                 Ok(record) => {
                     let died: u8 = if record[5].to_string() == "9999-99-99".to_string() { 0 } else { 1 };
                     self.add_patient(record[0].parse::<String>().unwrap(), record[1].parse::<char>().unwrap(), record[2].parse::<u8>().unwrap(), record[3].parse::<String>().unwrap(), record[4].parse::<String>().unwrap(), record[5].parse::<String>().unwrap(), record[6].parse::<u8>().unwrap(), record[7].parse::<u8>().unwrap(), record[8].parse::<i64>().unwrap(), record[9].parse::<u8>().unwrap(), record[10].parse::<u8>().unwrap(), record[11].parse::<u8>().unwrap(), record[12].parse::<u8>().unwrap(), record[13].parse::<u8>().unwrap(), record[14].parse::<u8>().unwrap(), record[15].parse::<u8>().unwrap(), record[16].parse::<u8>().unwrap(), record[17].parse::<u8>().unwrap(), record[18].parse::<u8>().unwrap(), record[19].parse::<u8>().unwrap(), record[20].parse::<u8>().unwrap(), record[21].parse::<u64>().unwrap(), record[22].parse::<u8>().unwrap(), died);
-
+                    pb.inc(1);
+                    thread::sleep(Duration::from_millis(5));
                 },
                 Err(_) => panic!("an error occurred")
             }
         }
+        pb.finish_with_message("done");
         return Ok(());
     }
 
@@ -162,7 +202,6 @@ impl Blockchain {
         let patient_info = patient;
         let nonce = 2836;
         let hash = "0000f816a87f806bb0073dcf026a64fb40c946b5abee2573702828694d5b4c43".to_string();
-        println!("{:?},\nPrevious Hash: {},\nHash: {},\nNonce: {}\n", patient_info, previous_hash, hash, nonce);
 
         let genesis_block = Block {
             id: id,
@@ -204,7 +243,6 @@ impl Blockchain {
         let patient_info = patient;
         let previous_hash = &self.blocks.last().expect("Blockchain is not empty").hash;
         let (nonce, hash) = mine_block(id, timestamp, previous_hash.as_str(), patient_info.id.clone());
-        println!("{:?},\nPrevious Hash: {},\nHash: {},\nNonce: {}\n", patient_info, previous_hash, hash, nonce);
         return Block {id, hash, previous_hash : previous_hash.clone(), timestamp, nonce, patient_info};
     }
 
@@ -271,6 +309,8 @@ impl Blockchain {
         }
         return logistic_regression(&x_arr, &y_arr);
     }
+
+    // println!("{:?},\nPrevious Hash: {},\nHash: {},\nNonce: {}\n", patient_info, previous_hash, hash, nonce);
 }
 
 //Uses RNG to generate nonce value

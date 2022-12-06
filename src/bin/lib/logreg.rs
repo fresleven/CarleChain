@@ -1,3 +1,4 @@
+
 // Reference code found here: https://paulkernfeld.com/2018/07/01/logistic-regression-in-rust.html
 
 use ndarray::{Array1, Array2};
@@ -8,12 +9,12 @@ const FTOL: f64 = 2.220446049250313e-09;
 
 const ARMIJO_GOLDSTEIN_CONTROL: f64 = 0.5;
 
-fn norm_l2(a_s: &Array1<f64>) -> f64 {
-    return a_s.fold(0.0, |b, a| b + a * a);
-}
+    fn norm_l2(a_s: &Array1<f64>) -> f64 {
+        return a_s.fold(0.0, |b, a| b + a * a);
+    }
 
 fn minimize_inner(beta_init: Array1<f64>, x: &Array2<f64>, y: &Array1<f64>, epsilon: f64) 
-  -> Result<Array1<f64>, &'static str> {
+    -> Result<Array1<f64>, &'static str> {
     let mut beta = beta_init;
 
     let (mut prev_loss, mut prev_gradient) = loss_gradient(&beta, x, y);
