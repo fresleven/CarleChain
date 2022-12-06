@@ -4,39 +4,35 @@ Group name: BigBlock
 Group: Ayush (akhot2), Jason (jasonoh3), Luke (lukep2), Sam (samuel37)
 
 
-Project Introduction: Our goal for this project is to build a decentralized blockchain for managing personal information in a hospital setting. If we have further time, we can implement a machine learning algorithm to find patterns in age and health for certain medical issues, such as high blood pressure. We've chosen to work on this project because it's a large area of research and may prove useful in identifying patterns in health while making sure personal information isn't public.
+Project Introduction: Our goal for this project is to build a decentralized blockchain for managing personal information in a hospital setting. If we have further time, we can implement a logistic regression algorithm to find patterns in death based on sex, age, pre-existing conditions, and other health factors. We've chosen to work on this project because it's a large area of research and may prove useful in identifying patterns in health while making sure personal information isn't public.
 
 
 Technical Overview: 
 
 
- - Create HashMap and data structure for holding information.
+ - Create blockchain data structure for holding information.
 
- - Implement Nonce, Hash, and Node to build blockchain
+ - Implement logistic regression algorithm to predict death from patient health
  
  Checkpoint 1
  
  - Use existing "dummy" personal information from Hospital data to simulate decentralized blockchain in-use
  
- - Implement ML on blockchain to learn patterns without accessesing personal data (if time allows) (construct dataloader before Checkpoint 2)
+ - Implement ML on blockchain to learn patterns in death using patient health information
  
 
 Possible Challenges:
 
- - Creating HashMap that doesn't conflict and have multiple "ids"
+ - Creating blockchain that doesn't conflict and has multiple ids and hash iterations
  
- - Using new blockchain and ML packages in Rust
+ - Creating blockchain and logistic regression algorithms in Rust
  
 
 References:
 
-[Blockchain Terms](https://www.velotio.com/engineering-blog/introduction-to-blockchain-and-how-bitcoin-works)
+[Example Dataset](https://www.kaggle.com/datasets/tanmoyx/covid19-patient-precondition-dataset)
 
-[Machine Learning Packages](https://www.arewelearningyet.com/)
+[Blockchain Example](https://blog.logrocket.com/how-to-build-a-blockchain-in-rust/)
 
-[Blockchain Packages](https://github.com/rust-in-blockchain/awesome-blockchain-rust)
-
-[Blockchain Tutorial](https://blog.logrocket.com/how-to-build-a-blockchain-in-rust/)
-
-[Blockchain Tutorial 2](https://blog.logrocket.com/custom-blockchain-implementation-rust-substrate/)
+[Logistic Regression Example](https://paulkernfeld.com/2018/07/01/logistic-regression-in-rust.html)
 
