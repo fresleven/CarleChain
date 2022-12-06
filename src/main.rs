@@ -1,12 +1,12 @@
-mod lib;
+mod bin;
 
-use crate::lib::blockchain::Blockchain;
-use crate::lib::logreg;
+use crate::bin::lib::blockchain::Blockchain;
+use crate::bin::lib::logreg;
 
+#[allow(non_snake_case)]
 fn main() {
-    // MAX START + LENGTH = 566602
     let start_patient_idx: usize = 0;
-    let length: usize = 566602;
+    let length: usize = 50;
 
     let mut blockchain: Blockchain = Blockchain::new();
     let file_path = "data/covid.csv".to_string();

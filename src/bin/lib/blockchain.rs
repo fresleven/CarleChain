@@ -16,7 +16,7 @@ use std::thread::JoinHandle;
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
-const DIFFICULTY_PREFIX: &str = "0";
+const DIFFICULTY_PREFIX: &str = "000";
 const NUM_OF_ROWS_COVID: u64 = 566602;
 
 //Structure of encapsulated patient data
@@ -170,6 +170,15 @@ impl Blockchain {
 
     //Single threaded approach to reading only a slice of the CSV.
     pub fn csv_to_blockchain_range(&mut self, file_path_: &String, start: usize, length: usize) -> Result<(), Box<dyn Error>> {    
+        if length == 0 {
+            panic!("NEED TO HAVE AT LEAST ONE BLOCK");
+        }
+        if length > NUM_OF_ROWS_COVID as usize || 
+            start >= NUM_OF_ROWS_COVID as usize || 
+            length + start > NUM_OF_ROWS_COVID as usize {
+            panic!("INVALID START OR LENGTH! MAX START + LENGTH = {}", NUM_OF_ROWS_COVID);
+        }
+        
         let mut reader = csv::Reader::from_path(file_path_)?;
         let slice = &reader.records().collect::<Vec<Result<csv::StringRecord, csv::Error>>>()[start..start + length];
         let pb = ProgressBar::new(length.try_into().unwrap());
