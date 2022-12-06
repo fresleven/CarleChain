@@ -14,10 +14,9 @@ use std::sync::{mpsc, mpsc::Receiver};
 use std::thread;
 use std::thread::JoinHandle;
 
-use std::time::Duration;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
-const DIFFICULTY_PREFIX: &str = "00000";
+const DIFFICULTY_PREFIX: &str = "0";
 const NUM_OF_ROWS_COVID: u64 = 566602;
 
 //Structure of encapsulated patient data
@@ -76,7 +75,7 @@ pub struct Blockchain {
 }
 
 //Reads string given a vector of iterators to lines in the CSV
-pub fn string_reader(records: &Vec<StringRecord>, pb: &ProgressBar) -> Vec<Patient> {
+pub fn string_reader(records: &Vec<StringRecord>, pb: &ProgressBar, m: &MultiProgress) -> Vec<Patient> {
     let mut patients: Vec<Patient> = Vec::new();
     for i in 0..records.len() {
         let record = &records[i];
@@ -85,8 +84,9 @@ pub fn string_reader(records: &Vec<StringRecord>, pb: &ProgressBar) -> Vec<Patie
         patients.push(patient);
         pb.set_message(format!("item #{}", i + 1));
         pb.inc(1);
-        thread::sleep(Duration::from_millis(5));
     }
+    m.println("").unwrap();
+    pb.finish_with_message("done");
     return patients;
 }
 
@@ -130,18 +130,15 @@ impl Blockchain {
         for i in 0..num_chunks {
             let owned_chunk = chunks.get(i).unwrap().clone();
             let tx_clone = tx.clone();
-            
-            let m_clone = m.clone();
             let pb_clone = pb_vec[i].clone();
+            let m_clone = m.clone();
             let h = thread::spawn(move || {
-                let result = string_reader(&owned_chunk, &pb_clone);
-                m_clone.println("pb is done!").unwrap();
-                pb_clone.finish_with_message("done");
+                let result = string_reader(&owned_chunk, &pb_clone, &m_clone);
                 tx_clone.send(result).unwrap();
             });
-            
             handles.push(h);
         }
+        m.println("").unwrap();
         return (handles, rx);
     }
 
@@ -149,12 +146,15 @@ impl Blockchain {
     pub fn thread_reducer(&mut self, receivers: (Vec<JoinHandle<()>>, Receiver<Vec<Patient>>)) {
         let (_, results) = receivers;
         let pb = ProgressBar::new(NUM_OF_ROWS_COVID);
-
+        let sty = ProgressStyle::with_template(
+            "[{elapsed_precise}] {bar:60.green} {pos:>7}/{len:7} {msg}",
+        ).unwrap();
+        pb.set_style(sty);
+        
         while let Ok(patients) = results.recv() {
             for patient in patients {
                 self.add_patient_struct(patient);
                 pb.inc(1);
-                thread::sleep(Duration::from_millis(5));
             }
         }
         pb.finish_with_message("done");
@@ -185,7 +185,6 @@ impl Blockchain {
                     let died: u8 = if record[5].to_string() == "9999-99-99".to_string() { 0 } else { 1 };
                     self.add_patient(record[0].parse::<String>().unwrap(), record[1].parse::<char>().unwrap(), record[2].parse::<u8>().unwrap(), record[3].parse::<String>().unwrap(), record[4].parse::<String>().unwrap(), record[5].parse::<String>().unwrap(), record[6].parse::<u8>().unwrap(), record[7].parse::<u8>().unwrap(), record[8].parse::<i64>().unwrap(), record[9].parse::<u8>().unwrap(), record[10].parse::<u8>().unwrap(), record[11].parse::<u8>().unwrap(), record[12].parse::<u8>().unwrap(), record[13].parse::<u8>().unwrap(), record[14].parse::<u8>().unwrap(), record[15].parse::<u8>().unwrap(), record[16].parse::<u8>().unwrap(), record[17].parse::<u8>().unwrap(), record[18].parse::<u8>().unwrap(), record[19].parse::<u8>().unwrap(), record[20].parse::<u8>().unwrap(), record[21].parse::<u64>().unwrap(), record[22].parse::<u8>().unwrap(), died);
                     pb.inc(1);
-                    thread::sleep(Duration::from_millis(5));
                 },
                 Err(_) => panic!("an error occurred")
             }
@@ -369,30 +368,5 @@ mod test {
             nonces.insert(generate_nonce());
         }
         assert_eq!(nonces.len(), 1000);
-    }
-
-    #[test]
-    fn add_patient_test() {
-        todo!();
-    }
-
-    #[test]
-    fn add_patient_struct_test() {
-        todo!();
-    }
-
-    #[test]
-    fn validate_block_test() {
-        todo!();
-    }
-
-    #[test]
-    fn validate_chain_test() {
-        todo!();
-    }
-
-    #[test]
-    fn mining_block_test() {
-        todo!();
     }
 }

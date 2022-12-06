@@ -9,7 +9,7 @@ fn main() {
     blockchain.csv_to_blockchain(&file_path).unwrap();
     
     if blockchain.validate_chain() {
-        println!("\n\n✔️  VALID BLOCKCHAIN\n");
+        println!("\n\n✔️  VALIDATED BLOCKCHAIN\n");
     } else {
         println!("\n\n❌ BROKEN BLOCKCHAIN\n");
     }
