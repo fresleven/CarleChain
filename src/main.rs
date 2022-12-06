@@ -3,7 +3,6 @@ mod bin;
 use crate::bin::lib::blockchain::Blockchain;
 use crate::bin::lib::logreg;
 
-#[allow(non_snake_case)]
 fn main() {
     let start_patient_idx: usize = 0;
     let length: usize = 50;
