@@ -5,6 +5,8 @@ __Group:__ Ayush (akhot2), Jason (jasonoh3), Luke (lukep2), Sam (samuel37)
 
 __Project Introduction:__ Our goal for this project is to build a decentralized blockchain for managing personal information in a hospital setting. If we have additional time, we can implement a logistic regression algorithm to find patterns in death based on sex, age, pre-existing conditions, and other health factors. We've chosen to work on this project because it's a large area of research and may prove useful in identifying health patterns while ensuring personal information isn't public.
 
+https://github.com/user-attachments/assets/bb568808-3127-4876-b8ad-6df6f97f71b7
+
 ---
 
 __Technical Overview:__ 
